@@ -1,0 +1,66 @@
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+
+    <TextView
+        android:id="@+id/text_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Alugaí"
+        android:textSize="30sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/cadastrarlocal"
+        app:layout_constraintVertical_chainStyle="packed"
+        android:layout_marginBottom="40dp"
+        />
+
+    <Button
+        android:id="@+id/cadastrarlocal"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Cadastrar Local"
+
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/button_listar"
+
+        app:layout_constraintVertical_chainStyle="packed"
+        android:layout_marginBottom="16dp"
+        />
+
+    <Button
+        android:id="@+id/button_listar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Listar Locais"
+
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+
+        app:layout_constraintTop_toBottomOf="@+id/cadastrarlocal"
+        app:layout_constraintBottom_toTopOf="@+id/button_locar"
+        android:layout_marginBottom="16dp"
+        />
+
+    <Button
+        android:id="@+id/button_locar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Locar Equipamento"
+
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+
+        app:layout_constraintTop_toBottomOf="@+id/button_listar"
+        app:layout_constraintBottom_toBottomOf="parent"
+        />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "407397070830",
+    "project_id": "alugai-1789e",
+    "storage_bucket": "alugai-1789e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:407397070830:android:3f015d1a6a07bf02dcc0ff",
+        "android_client_info": {
+          "package_name": "com.example.aluga"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBMENJLX4XVKxNJEEbcqZGc10gQ-sV4pmo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
