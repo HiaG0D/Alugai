@@ -36,6 +36,11 @@
             android:name=".LocarEquipamentoActivity"
             android:exported="false" />
 
+        <!-- Activity para Detalhes de um Local -->
+        <activity
+            android:name=".LocalDetailActivity"
+            android:exported="false" />
+
     </application>
 
 </manifest>
