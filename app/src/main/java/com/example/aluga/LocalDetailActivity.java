@@ -42,18 +42,15 @@ public class LocalDetailActivity extends AppCompatActivity {
 
         db = FirebaseFirestore.getInstance();
 
-        // Inicializa os componentes da UI
         detailLocalNome = findViewById(R.id.detail_local_nome);
         detailValorTotal = findViewById(R.id.detail_valor_total);
         detailProximaDevolucao = findViewById(R.id.detail_proxima_devolucao);
         recyclerEquipamentos = findViewById(R.id.recycler_equipamentos);
 
-        // Configura o RecyclerView
         recyclerEquipamentos.setLayoutManager(new LinearLayoutManager(this));
         adapter = new EquipamentoAdapter(equipamentosList);
         recyclerEquipamentos.setAdapter(adapter);
 
-        // Pega os dados da Intent
         localId = getIntent().getStringExtra(EXTRA_LOCAL_ID);
         String localNome = getIntent().getStringExtra(EXTRA_LOCAL_NOME);
 
@@ -61,7 +58,6 @@ public class LocalDetailActivity extends AppCompatActivity {
             detailLocalNome.setText(localNome);
         }
 
-        // Verifica se o ID do local é válido antes de carregar os dados
         if (localId != null && !localId.isEmpty()) {
             carregarDetalhesDoLocal();
         } else {
@@ -82,20 +78,17 @@ public class LocalDetailActivity extends AppCompatActivity {
                         Map<String, Object> equipamento = document.getData();
                         equipamentosList.add(equipamento);
 
-                        // Calcula o valor total
                         Double valor = document.getDouble("valorTotalAluguel");
                         if (valor != null) {
                             valorTotal += valor;
                         }
 
-                        // Encontra a data de devolução mais próxima
                         long dataDevolucaoMillis = calcularDataDevolucaoMillis(document);
                         if (dataDevolucaoMillis < proximaDataMillis) {
                             proximaDataMillis = dataDevolucaoMillis;
                         }
                     }
 
-                    // Atualiza a UI com os dados calculados
                     detailValorTotal.setText(String.format(Locale.getDefault(), "Valor Total Alugado: R$ %.2f", valorTotal));
 
                     if (proximaDataMillis == Long.MAX_VALUE) {
@@ -105,7 +98,7 @@ public class LocalDetailActivity extends AppCompatActivity {
                         detailProximaDevolucao.setText("Próxima Devolução: " + sdf.format(new Date(proximaDataMillis)));
                     }
 
-                    adapter.notifyDataSetChanged(); // Notifica o adapter que a lista mudou
+                    adapter.notifyDataSetChanged();
                 })
                 .addOnFailureListener(e -> {
                     Log.e("FirebaseDetailError", "Erro ao buscar equipamentos", e);

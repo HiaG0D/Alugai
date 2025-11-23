@@ -34,18 +34,19 @@ public class EquipamentoAdapter extends RecyclerView.Adapter<EquipamentoAdapter.
     public void onBindViewHolder(@NonNull EquipamentoViewHolder holder, int position) {
         Map<String, Object> equipamento = equipamentosList.get(position);
 
-        // Preenche o nome do equipamento
         holder.nomeEquipamento.setText((String) equipamento.get("nomeEquipamento"));
 
-        // Preenche os detalhes (quantidade, valor, data de devolução)
+        // Lê os dados do equipamento, incluindo os de prazo
         Long quantidade = (Long) equipamento.get("quantidadeLocada");
         Double valor = (Double) equipamento.get("valorTotalAluguel");
         String dataAluguelStr = (String) equipamento.get("dataAluguel");
         Long prazoQtd = (Long) equipamento.get("prazoQuantidade");
         String prazoUnidade = (String) equipamento.get("prazoUnidade");
 
+        // Calcula a data de devolução para este item
         String dataDevolucao = calcularDataDevolucao(dataAluguelStr, prazoQtd, prazoUnidade);
 
+        // Formata a string de detalhes com a data de devolução
         String detalhes = String.format(Locale.getDefault(),
                 "Qtd: %d | Valor: R$ %.2f | Devolução: %s",
                 quantidade != null ? quantidade : 0,
@@ -72,7 +73,7 @@ public class EquipamentoAdapter extends RecyclerView.Adapter<EquipamentoAdapter.
     }
 
     /**
-     * Calcula a data de devolução com base nos dados do Firebase.
+     * Método auxiliar para calcular a data de devolução.
      */
     private String calcularDataDevolucao(String dataInicioStr, Long prazoQtd, String prazoUnidade) {
         if (dataInicioStr == null || prazoQtd == null || prazoUnidade == null) {

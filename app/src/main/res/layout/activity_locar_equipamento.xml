@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="16dp"
-    tools:context="CadastrarLocal.Local"
+    tools:context=".LocarEquipamentoActivity"
     android:id="@+id/locar_equipamento"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
@@ -140,10 +140,10 @@
         />
 
     <TextView
-        android:id="@+id/label_prazo"
+        android:id="@+id/label_periodo"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Prazo de Devolução"
+        android:text="Periodo de aluguel"
         android:textSize="15sp"
         android:layout_marginTop="16dp"
         app:layout_constraintTop_toBottomOf="@+id/input_data_aluguel"
@@ -151,41 +151,26 @@
         app:layout_constraintEnd_toEndOf="parent"
         />
 
-    <EditText
-        android:id="@+id/input_prazo_quantidade"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:hint="Quantidade"
-        android:inputType="number"
-        android:maxLength="3"
-        android:layout_marginTop="8dp"
-        app:layout_constraintTop_toBottomOf="@+id/label_prazo"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintWidth_percent="0.4"
-        />
-
     <Spinner
-        android:id="@+id/spinner_prazo_unidade"
-        android:layout_width="0dp"
+        android:id="@+id/spinner_periodo_aluguel"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:entries="@array/unidades_prazo"
-        app:layout_constraintTop_toTopOf="@id/input_prazo_quantidade"
-        app:layout_constraintBottom_toBottomOf="@id/input_prazo_quantidade"
-        app:layout_constraintStart_toEndOf="@id/input_prazo_quantidade"
+        android:entries="@array/ciclos_aluguel"
+        android:layout_marginTop="8dp"
+        app:layout_constraintTop_toBottomOf="@+id/label_periodo"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintWidth_percent="0.6"
-        android:layout_marginStart="8dp"
         />
 
     <TextView
         android:id="@+id/text_data_devolucao"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Data de Devolução: --"
+        android:text="Previsão de Devolução: --"
         android:textSize="16sp"
         android:paddingTop="16dp"
         android:textStyle="bold"
-        app:layout_constraintTop_toBottomOf="@id/input_prazo_quantidade"
+        app:layout_constraintTop_toBottomOf="@+id/spinner_periodo_aluguel"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         />

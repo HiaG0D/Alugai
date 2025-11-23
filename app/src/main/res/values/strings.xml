@@ -1,8 +1,16 @@
 <resources>
     <string name="app_name">Alugaí</string>
+
     <string-array name="unidades_prazo">
         <item>dias</item>
         <item>semanas</item>
         <item>meses</item>
     </string-array>
+
+    <string-array name="ciclos_aluguel">
+        <item>Diário</item>
+        <item>Semanal</item>
+        <item>Mensal</item>
+    </string-array>
+
 </resources>
