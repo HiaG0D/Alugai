@@ -11,20 +11,29 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Alugaí">
+
         <activity
             android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
-        <activity android:name="CadastrarLocal.Local"
-            android:exported="false"
-            tools:ignore="Instantiatable" />
-        <activity android:name=".ListaLocaisActivity"
+        <!-- Activity para Cadastrar um novo Local -->
+        <activity
+            android:name=".CadastroLocalActivity"
+            android:exported="false" />
+
+        <!-- Activity para Listar os Locais -->
+        <activity
+            android:name=".ListaLocaisActivity"
+            android:exported="false" />
+
+        <!-- Activity para Locar um Equipamento -->
+        <activity
+            android:name=".LocarEquipamentoActivity"
             android:exported="false" />
 
     </application>

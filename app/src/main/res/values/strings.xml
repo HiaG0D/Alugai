@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">Alugaí</string>
+    <string-array name="unidades_prazo">
+        <item>dias</item>
+        <item>semanas</item>
+        <item>meses</item>
+    </string-array>
 </resources>
