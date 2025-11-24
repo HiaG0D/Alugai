@@ -32,6 +32,10 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+/**
+ * Activity responsável por criar um novo aluguel de equipamento ou editar um existente.
+ * Lida com a lógica de preenchimento do formulário, seleção de período, cálculo de valor e comunicação com o Firebase.
+ */
 public class LocarEquipamentoActivity extends AppCompatActivity {
 
     // --- Componentes da UI ---
@@ -51,8 +55,8 @@ public class LocarEquipamentoActivity extends AppCompatActivity {
     private ArrayAdapter<LocalSpinnerItem> locaisAdapter;
 
     // --- Estado da Activity ---
-    private boolean isEditMode = false;
-    private String localId, equipmentId;
+    private boolean isEditMode = false; // Flag para controlar se a tela está em modo de criação ou edição
+    private String localId, equipmentId; // IDs para identificar os documentos no Firebase durante a edição
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,13 +67,18 @@ public class LocarEquipamentoActivity extends AppCompatActivity {
         setupViews();
         setupListeners();
 
+        // Verifica se a activity foi iniciada com dados de um equipamento para edição
         if (getIntent().hasExtra("EQUIPMENT_ID")) {
             enterEditMode();
         } else {
+            // Se não, carrega os locais para um novo aluguel
             carregarLocaisDoFirebase();
         }
     }
 
+    /**
+     * Inicializa todas as variáveis de componentes da UI, associando-as com seus IDs no layout XML.
+     */
     private void setupViews() {
         spinnerLocais = findViewById(R.id.spinner_locais);
         spinnerPeriodoSimples = findViewById(R.id.spinner_periodo_simples);
@@ -93,21 +102,28 @@ public class LocarEquipamentoActivity extends AppCompatActivity {
         spinnerLocais.setAdapter(locaisAdapter);
     }
 
+    /**
+     * Configura todos os listeners de eventos para os componentes da UI.
+     */
     private void setupListeners() {
         inputDataAluguel.setOnClickListener(v -> showDatePickerDialog());
         btnLocar.setOnClickListener(v -> salvarOuAtualizarLocacao());
 
+        // Listener para o seletor de modo de período (Simples vs. Customizado)
         rgPeriodoModo.setOnCheckedChangeListener((group, checkedId) -> {
             if (checkedId == R.id.rb_periodo_simples) {
+                // Mostra o spinner de período simples e esconde o customizado
                 spinnerPeriodoSimples.setVisibility(View.VISIBLE);
                 containerPeriodoCustom.setVisibility(View.GONE);
             } else {
+                // Mostra os campos de período customizado e esconde o simples
                 spinnerPeriodoSimples.setVisibility(View.GONE);
                 containerPeriodoCustom.setVisibility(View.VISIBLE);
             }
             calcularEAtualizarDataDevolucao();
         });
 
+        // Watcher para recalcular a data sempre que a data de início ou o prazo mudam
         TextWatcher textWatcher = new TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
             @Override public void onTextChanged(CharSequence s, int start, int before, int count) {}
@@ -116,6 +132,7 @@ public class LocarEquipamentoActivity extends AppCompatActivity {
         inputDataAluguel.addTextChangedListener(textWatcher);
         inputPrazoQuantidade.addTextChangedListener(textWatcher);
 
+        // Listener para os spinners de período, para recalcular a data quando a seleção muda
         AdapterView.OnItemSelectedListener spinnerListener = new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
@@ -127,6 +144,9 @@ public class LocarEquipamentoActivity extends AppCompatActivity {
         spinnerPrazoUnidade.setOnItemSelectedListener(spinnerListener);
     }
 
+    /**
+     * Configura a tela para o modo de edição, preenchendo os campos com os dados existentes.
+     */
     private void enterEditMode() {
         isEditMode = true;
         btnLocar.setText("Atualizar");
@@ -136,15 +156,18 @@ public class LocarEquipamentoActivity extends AppCompatActivity {
         Map<String, Object> equipmentData = (Map<String, Object>) getIntent().getSerializableExtra("EQUIPMENT_DATA");
 
         if (equipmentData == null) {
+            Toast.makeText(this, "Erro: Dados do equipamento não encontrados.", Toast.LENGTH_LONG).show();
             finish();
             return;
         }
 
+        // Preenche os campos do formulário com os dados do equipamento
         inputEquipamentoNome.setText((String) equipmentData.get("nomeEquipamento"));
         inputQuantidade.setText(String.valueOf(equipmentData.get("quantidadeLocada")));
         inputValor.setText(String.format(Locale.US, "%.2f", equipmentData.get("valorTotalAluguel")));
         inputDataAluguel.setText((String) equipmentData.get("dataAluguel"));
 
+        // Seleciona o modo de período (Simples ou Customizado) correto
         Long prazoQtd = (Long) equipmentData.get("prazoQuantidade");
         if (prazoQtd != null && prazoQtd == 1) {
             rbPeriodoSimples.setChecked(true);
@@ -155,25 +178,33 @@ public class LocarEquipamentoActivity extends AppCompatActivity {
             setPeriodoCustomSpinner((String) equipmentData.get("prazoUnidade"));
         }
 
+        // Em modo de edição, o valor é sempre o total, e o seletor é escondido
         rbValorTotal.performClick();
         rgValorTipo.setVisibility(View.GONE);
 
+        // Carrega apenas o local atual no spinner e o desabilita para evitar mudança de local
         carregarLocalUnico(localId);
         spinnerLocais.setEnabled(false);
     }
 
+    /**
+     * Coleta os dados do formulário, valida, e decide se deve criar um novo registro ou atualizar um existente.
+     */
     private void salvarOuAtualizarLocacao() {
+        // 1. Coleta os dados dos campos de texto
         String equipamentoNome = inputEquipamentoNome.getText().toString().trim();
         String quantidadeStr = inputQuantidade.getText().toString().trim();
         String valorStr = inputValor.getText().toString().trim();
         String dataAluguel = inputDataAluguel.getText().toString();
 
+        // 2. Validação de campos obrigatórios
         if (equipamentoNome.isEmpty() || quantidadeStr.isEmpty() || valorStr.isEmpty() || dataAluguel.isEmpty()) {
             Toast.makeText(this, "Preencha todos os campos obrigatórios.", Toast.LENGTH_SHORT).show();
             return;
         }
 
         try {
+            // 3. Conversão e cálculo dos valores
             int quantidade = Integer.parseInt(quantidadeStr);
             double valorInput = Double.parseDouble(valorStr.replace(",", "."));
             double valorTotalAluguel;
@@ -184,6 +215,7 @@ public class LocarEquipamentoActivity extends AppCompatActivity {
                 valorTotalAluguel = valorInput;
             }
 
+            // 4. Tradução da seleção de período para os dados a serem salvos
             int prazoQtd;
             String prazoUnidade;
 
@@ -203,6 +235,7 @@ public class LocarEquipamentoActivity extends AppCompatActivity {
                 prazoUnidade = spinnerPrazoUnidade.getSelectedItem().toString();
             }
 
+            // 5. Monta o objeto (mapa) com todos os dados para o Firebase
             Map<String, Object> locacaoData = new HashMap<>();
             locacaoData.put("nomeEquipamento", equipamentoNome);
             locacaoData.put("quantidadeLocada", quantidade);
@@ -210,14 +243,15 @@ public class LocarEquipamentoActivity extends AppCompatActivity {
             locacaoData.put("dataAluguel", dataAluguel);
             locacaoData.put("prazoQuantidade", prazoQtd);
             locacaoData.put("prazoUnidade", prazoUnidade);
-            locacaoData.put("isValorUnitario", rbValorUnitario.isChecked());
+            locacaoData.put("isValorUnitario", rbValorUnitario.isChecked()); // Salva como o valor foi inserido
 
+            // 6. Decide se atualiza um documento existente ou cria um novo
             if (isEditMode) {
                 db.collection("locais").document(localId).collection("equipamentos_locados").document(equipmentId)
                         .update(locacaoData)
                         .addOnSuccessListener(aVoid -> {
-                            Toast.makeText(this, "Equipamento atualizado!", Toast.LENGTH_SHORT).show();
-                            finish();
+                            Toast.makeText(this, "Equipamento atualizado com sucesso!", Toast.LENGTH_SHORT).show();
+                            finish(); // Fecha a tela e volta para os detalhes
                         })
                         .addOnFailureListener(e -> Toast.makeText(this, "Erro ao atualizar.", Toast.LENGTH_SHORT).show());
             } else {
@@ -230,16 +264,19 @@ public class LocarEquipamentoActivity extends AppCompatActivity {
                 db.collection("locais").document(currentLocalId).collection("equipamentos_locados")
                         .add(locacaoData)
                         .addOnSuccessListener(docRef -> {
-                            Toast.makeText(this, "Equipamento locado!", Toast.LENGTH_SHORT).show();
-                            limparFormulario();
+                            Toast.makeText(this, "Equipamento locado com sucesso!", Toast.LENGTH_SHORT).show();
+                            limparFormulario(); // Limpa o formulário para a próxima locação
                         })
                         .addOnFailureListener(e -> Toast.makeText(this, "Erro ao locar.", Toast.LENGTH_SHORT).show());
             }
         } catch (NumberFormatException e) {
-            Toast.makeText(this, "Verifique os campos de quantidade e valor.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Verifique os campos numéricos (quantidade e valor).", Toast.LENGTH_SHORT).show();
         }
     }
 
+    /**
+     * Busca todos os locais do Firebase para preencher o spinner de seleção de local.
+     */
     private void carregarLocaisDoFirebase() {
         db.collection("locais").get().addOnSuccessListener(queryDocumentSnapshots -> {
             locaisList.clear();
@@ -250,6 +287,9 @@ public class LocarEquipamentoActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * Em modo de edição, carrega apenas o local atual para exibir no spinner desabilitado.
+     */
     private void carregarLocalUnico(String localId) {
         db.collection("locais").document(localId).get().addOnSuccessListener(documentSnapshot -> {
             if (documentSnapshot.exists()) {
@@ -260,6 +300,9 @@ public class LocarEquipamentoActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * Seleciona o item correto no spinner de período simples com base na unidade de prazo.
+     */
     private void setPeriodoSimplesSpinner(String prazoUnidade) {
         if (prazoUnidade == null) return;
         ArrayAdapter<CharSequence> adapter = (ArrayAdapter<CharSequence>) spinnerPeriodoSimples.getAdapter();
@@ -268,6 +311,9 @@ public class LocarEquipamentoActivity extends AppCompatActivity {
         else spinnerPeriodoSimples.setSelection(adapter.getPosition("Diário"));
     }
 
+    /**
+     * Seleciona o item correto no spinner de período customizado.
+     */
     private void setPeriodoCustomSpinner(String prazoUnidade) {
         if (prazoUnidade == null) return;
         ArrayAdapter<CharSequence> adapter = (ArrayAdapter<CharSequence>) spinnerPrazoUnidade.getAdapter();
@@ -276,6 +322,9 @@ public class LocarEquipamentoActivity extends AppCompatActivity {
         else spinnerPrazoUnidade.setSelection(adapter.getPosition("dias"));
     }
 
+    /**
+     * Limpa todos os campos do formulário para uma nova inserção.
+     */
     private void limparFormulario() {
         inputEquipamentoNome.setText("");
         inputQuantidade.setText("");
@@ -287,6 +336,9 @@ public class LocarEquipamentoActivity extends AppCompatActivity {
         textDataDevolucao.setText("Previsão de Devolução: --");
     }
 
+    /**
+     * Exibe o calendário para o usuário selecionar a data de início do aluguel.
+     */
     private void showDatePickerDialog() {
         final Calendar c = Calendar.getInstance();
         new DatePickerDialog(this, (view, year, month, dayOfMonth) -> {
@@ -297,6 +349,9 @@ public class LocarEquipamentoActivity extends AppCompatActivity {
         }, c.get(Calendar.YEAR), c.get(Calendar.MONTH), c.get(Calendar.DAY_OF_MONTH)).show();
     }
 
+    /**
+     * Calcula e atualiza a previsão da data de devolução com base nos campos de período.
+     */
     private void calcularEAtualizarDataDevolucao() {
         String dataInicioStr = inputDataAluguel.getText().toString();
         if (dataInicioStr.isEmpty()) {
@@ -338,7 +393,9 @@ public class LocarEquipamentoActivity extends AppCompatActivity {
         }
     }
 
-    // Classe interna para o Spinner de Locais
+    /**
+     * Classe interna para popular o Spinner de locais, guardando o ID e o Nome do local.
+     */
     private static class LocalSpinnerItem {
         private String id;
         private String nome;
@@ -355,7 +412,7 @@ public class LocarEquipamentoActivity extends AppCompatActivity {
         @NonNull
         @Override
         public String toString() {
-            return nome;
+            return nome; // O ArrayAdapter usará isso para exibir o texto no Spinner
         }
     }
 }
