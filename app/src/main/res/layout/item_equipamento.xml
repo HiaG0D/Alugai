@@ -1,23 +1,46 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
     android:paddingTop="8dp"
     android:paddingBottom="8dp">
 
-    <TextView
-        android:id="@+id/item_equipamento_nome"
+    <LinearLayout
+        android:id="@+id/equipment_info_container"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/equipment_options_menu"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:id="@+id/item_equipamento_nome"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            tools:text="Nome do Equipamento" />
+
+        <TextView
+            android:id="@+id/item_equipamento_detalhes"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            tools:text="Qtd: 1 | Valor: R$ 50,00 | Devolução: 25/12/2024" />
+
+    </LinearLayout>
+
+    <ImageView
+        android:id="@+id/equipment_options_menu"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Nome do Equipamento"
-        android:textSize="16sp"
-        android:textStyle="bold" />
+        android:contentDescription="Opções do Equipamento"
+        android:src="@android:drawable/ic_menu_more"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
-    <TextView
-        android:id="@+id/item_equipamento_detalhes"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Qtd: 1 | Valor: R$ 50,00 | Devolução: 25/12/2024" />
-
-</LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

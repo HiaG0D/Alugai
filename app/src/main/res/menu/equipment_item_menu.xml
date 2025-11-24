@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/menu_equip_edit"
+        android:title="Editar" />
+    <item
+        android:id="@+id/menu_equip_delete"
+        android:title="Excluir Registro" />
+    <item
+        android:id="@+id/menu_equip_return"
+        android:title="Marcar como Devolvido" />
+</menu>
