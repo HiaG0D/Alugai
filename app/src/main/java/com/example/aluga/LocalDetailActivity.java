@@ -34,21 +34,28 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+/**
+ * Activity para exibir os detalhes de um Local específico, incluindo os equipamentos
+ * que estão atualmente alugados e o histórico de equipamentos já devolvidos.
+ */
 public class LocalDetailActivity extends AppCompatActivity implements EquipamentoAdapter.OnEquipmentOptionsClickListener {
 
+    // Chaves para passar dados via Intent
     public static final String EXTRA_LOCAL_ID = "EXTRA_LOCAL_ID";
     public static final String EXTRA_LOCAL_NOME = "EXTRA_LOCAL_NOME";
 
+    // --- Componentes da UI ---
     private TextView detailLocalNome, detailValorTotal, detailProximaDevolucao;
     private RecyclerView recyclerEquipamentos, recyclerHistorico;
 
+    // --- Firebase & Adapters ---
     private FirebaseFirestore db;
     private EquipamentoAdapter equipamentoAdapter;
     private DevolvidoAdapter historicoAdapter;
     private List<Map<String, Object>> equipamentosList = new ArrayList<>();
     private List<Map<String, Object>> historicoList = new ArrayList<>();
 
-    private String localId;
+    private String localId; // ID do documento do local no Firebase
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,6 +66,7 @@ public class LocalDetailActivity extends AppCompatActivity implements Equipament
 
         setupViews();
 
+        // Pega os dados passados da tela de lista
         localId = getIntent().getStringExtra(EXTRA_LOCAL_ID);
         String localNome = getIntent().getStringExtra(EXTRA_LOCAL_NOME);
 
@@ -67,6 +75,10 @@ public class LocalDetailActivity extends AppCompatActivity implements Equipament
         }
     }
 
+    /**
+     * O ciclo de vida onResume é usado para garantir que os dados sejam recarregados
+     * sempre que o usuário retorna a esta tela (por exemplo, após editar um item).
+     */
     @Override
     protected void onResume() {
         super.onResume();
@@ -78,22 +90,31 @@ public class LocalDetailActivity extends AppCompatActivity implements Equipament
         }
     }
 
+    /**
+     * Inicializa todos os componentes da interface e configura os RecyclerViews.
+     */
     private void setupViews() {
         detailLocalNome = findViewById(R.id.detail_local_nome);
         detailValorTotal = findViewById(R.id.detail_valor_total);
         detailProximaDevolucao = findViewById(R.id.detail_proxima_devolucao);
         
+        // Configura a lista de equipamentos atualmente alugados
         recyclerEquipamentos = findViewById(R.id.recycler_equipamentos);
         recyclerEquipamentos.setLayoutManager(new LinearLayoutManager(this));
         equipamentoAdapter = new EquipamentoAdapter(equipamentosList, this);
         recyclerEquipamentos.setAdapter(equipamentoAdapter);
 
+        // Configura a lista do histórico de devoluções
         recyclerHistorico = findViewById(R.id.recycler_historico_devolucoes);
         recyclerHistorico.setLayoutManager(new LinearLayoutManager(this));
         historicoAdapter = new DevolvidoAdapter(historicoList);
         recyclerHistorico.setAdapter(historicoAdapter);
     }
 
+    /**
+     * Busca os dados da subcoleção 'equipamentos_locados' no Firebase.
+     * Calcula o valor total e a data de devolução mais próxima em tempo real.
+     */
     private void carregarDetalhesDoLocal() {
         db.collection("locais").document(localId)
                 .collection("equipamentos_locados")
@@ -105,20 +126,23 @@ public class LocalDetailActivity extends AppCompatActivity implements Equipament
 
                     for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
                         Map<String, Object> equipamento = document.getData();
-                        equipamento.put("id", document.getId());
+                        equipamento.put("id", document.getId()); // Adiciona o ID do documento para referência futura
                         equipamentosList.add(equipamento);
 
+                        // Soma o valor total de todos os aluguéis ativos
                         Double valor = document.getDouble("valorTotalAluguel");
                         if (valor != null) {
                             valorTotal += valor;
                         }
 
+                        // Encontra a data de devolução mais próxima entre todos os equipamentos
                         long dataDevolucaoMillis = calcularDataDevolucaoMillis(document);
                         if (dataDevolucaoMillis < proximaDataMillis) {
                             proximaDataMillis = dataDevolucaoMillis;
                         }
                     }
 
+                    // Atualiza os TextViews no topo da tela
                     detailValorTotal.setText(String.format(Locale.getDefault(), "Valor Total Alugado: R$ %.2f", valorTotal));
 
                     if (proximaDataMillis == Long.MAX_VALUE) {
@@ -132,10 +156,13 @@ public class LocalDetailActivity extends AppCompatActivity implements Equipament
                 });
     }
 
+    /**
+     * Busca os dados da subcoleção 'historico_devolucoes' e os exibe na lista de histórico.
+     */
     private void carregarHistoricoDoLocal() {
         db.collection("locais").document(localId)
                 .collection("historico_devolucoes")
-                .orderBy("dataDaDevolucao")
+                .orderBy("dataDaDevolucao") // Ordena para mostrar os mais antigos primeiro
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
                     historicoList.clear();
@@ -146,12 +173,14 @@ public class LocalDetailActivity extends AppCompatActivity implements Equipament
                 });
     }
 
+    // --- Implementação dos Métodos de Clique do Menu de Equipamento ---
+
     @Override
     public void onEditClick(Map<String, Object> equipment) {
         Intent intent = new Intent(this, LocarEquipamentoActivity.class);
         intent.putExtra("LOCAL_ID", localId);
         intent.putExtra("EQUIPMENT_ID", (String) equipment.get("id"));
-        intent.putExtra("EQUIPMENT_DATA", (Serializable) equipment);
+        intent.putExtra("EQUIPMENT_DATA", (Serializable) equipment); // Passa todos os dados para a tela de edição
         startActivity(intent);
     }
 
@@ -171,6 +200,9 @@ public class LocalDetailActivity extends AppCompatActivity implements Equipament
         showDevolucaoDialog(equipment);
     }
 
+    /**
+     * Mostra o diálogo para inserir a quantidade de itens a devolver.
+     */
     private void showDevolucaoDialog(Map<String, Object> equipment) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         LayoutInflater inflater = this.getLayoutInflater();
@@ -197,11 +229,15 @@ public class LocalDetailActivity extends AppCompatActivity implements Equipament
                             Toast.makeText(this, "Quantidade inválida.", Toast.LENGTH_SHORT).show();
                             return;
                         }
-                        
+
+                        // Verifica se o valor do aluguel foi definido como unitário ou total
                         Boolean isUnitario = (Boolean) equipment.getOrDefault("isValorUnitario", false);
+
+                        // Se for devolução total ou se o preço for unitário, processa diretamente.
                         if (isUnitario || qtdADevolver == quantidadeAtual) {
-                            processarDevolucao(equipment, qtdADevolver, -1); // -1 indica que não precisa de novo valor
+                            processarDevolucao(equipment, qtdADevolver, -1); // -1 indica que o valor pode ser recalculado ou não é necessário
                         } else {
+                            // Se o preço for total e a devolução for parcial, pede o novo valor do contrato.
                             promptForNewTotalValue(equipment, qtdADevolver);
                         }
 
@@ -214,6 +250,10 @@ public class LocalDetailActivity extends AppCompatActivity implements Equipament
         builder.create().show();
     }
 
+    /**
+     * Mostra um segundo diálogo para o usuário inserir o novo valor total do contrato
+     * após uma devolução parcial de um item com preço total.
+     */
     private void promptForNewTotalValue(Map<String, Object> equipment, long qtdADevolver) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         LayoutInflater inflater = this.getLayoutInflater();
@@ -240,6 +280,12 @@ public class LocalDetailActivity extends AppCompatActivity implements Equipament
                 .create().show();
     }
 
+    /**
+     * Processa a devolução, movendo o item para o histórico e atualizando ou deletando o registro original.
+     * @param equipment Os dados do equipamento original.
+     * @param qtdADevolver A quantidade de itens a serem devolvidos.
+     * @param novoValorTotal O novo valor total do contrato (ou -1 se não for necessário).
+     */
     private void processarDevolucao(Map<String, Object> equipment, long qtdADevolver, double novoValorTotal) {
         String equipmentId = (String) equipment.get("id");
         long quantidadeAtual = (long) equipment.get("quantidadeLocada");
@@ -247,23 +293,33 @@ public class LocalDetailActivity extends AppCompatActivity implements Equipament
         DocumentReference locadoRef = db.collection("locais").document(localId).collection("equipamentos_locados").document(equipmentId);
         CollectionReference historicoRef = db.collection("locais").document(localId).collection("historico_devolucoes");
 
+        // Usa um WriteBatch para garantir que todas as operações sejam atômicas (ou tudo funciona, ou nada funciona)
         WriteBatch batch = db.batch();
 
+        // Prepara o novo item para o histórico
         Map<String, Object> historicoItem = new HashMap<>(equipment);
-        historicoItem.remove("id");
+        historicoItem.remove("id"); // Remove o ID temporário do mapa de dados
         historicoItem.put("quantidadeDevolvida", qtdADevolver);
-        historicoItem.put("dataDaDevolucao", FieldValue.serverTimestamp());
+        historicoItem.put("dataDaDevolucao", FieldValue.serverTimestamp()); // Usa o timestamp do servidor para a data
+
+        // Adiciona o novo item ao histórico
+        batch.set(historicoRef.document(), historicoItem);
 
         if (qtdADevolver == quantidadeAtual) {
+            // Se a devolução é total, deleta o registro original de equipamentos_locados
             batch.delete(locadoRef);
         } else {
+            // Se a devolução é parcial, atualiza o registro original
             long novaQuantidade = quantidadeAtual - qtdADevolver;
             Map<String, Object> updates = new HashMap<>();
             updates.put("quantidadeLocada", novaQuantidade);
 
-            if (novoValorTotal != -1) { // Se um novo valor foi fornecido
+            // Verifica se o valor precisa ser recalculado
+            if (novoValorTotal != -1) {
+                // Usa o novo valor total fornecido pelo usuário
                 updates.put("valorTotalAluguel", novoValorTotal);
-            } else { // Se era valor unitário, recalcula
+            } else {
+                // Se o valor era unitário, recalcula automaticamente
                 double valorTotalAtual = (double) equipment.get("valorTotalAluguel");
                 double valorUnitario = valorTotalAtual / quantidadeAtual;
                 updates.put("valorTotalAluguel", valorUnitario * novaQuantidade);
@@ -271,17 +327,19 @@ public class LocalDetailActivity extends AppCompatActivity implements Equipament
             batch.update(locadoRef, updates);
         }
 
-        batch.set(historicoRef.document(), historicoItem);
-
+        // Executa todas as operações em lote
         batch.commit().addOnSuccessListener(aVoid -> {
             Toast.makeText(this, "Devolução processada!", Toast.LENGTH_SHORT).show();
-            carregarDetalhesDoLocal();
+            carregarDetalhesDoLocal(); // Recarrega ambas as listas
             carregarHistoricoDoLocal();
         }).addOnFailureListener(e -> {
             Toast.makeText(this, "Erro ao processar devolução.", Toast.LENGTH_SHORT).show();
         });
     }
 
+    /**
+     * Exclui permanentemente o registro de um equipamento alugado.
+     */
     private void excluirEquipamentoDoFirebase(String equipmentId) {
         if (localId == null || equipmentId == null) return;
         db.collection("locais").document(localId)
@@ -293,6 +351,9 @@ public class LocalDetailActivity extends AppCompatActivity implements Equipament
                 });
     }
 
+    /**
+     * Calcula a data de devolução em milissegundos para um dado equipamento.
+     */
     private long calcularDataDevolucaoMillis(QueryDocumentSnapshot document) {
         String dataAluguelStr = document.getString("dataAluguel");
         Long prazoQtd = document.getLong("prazoQuantidade");
