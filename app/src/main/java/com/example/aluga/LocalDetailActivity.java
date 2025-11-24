@@ -3,7 +3,11 @@ package com.example.aluga;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -12,6 +16,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
@@ -52,7 +57,6 @@ public class LocalDetailActivity extends AppCompatActivity implements Equipament
         recyclerEquipamentos = findViewById(R.id.recycler_equipamentos);
 
         recyclerEquipamentos.setLayoutManager(new LinearLayoutManager(this));
-        // Passa "this" como listener para o adapter
         adapter = new EquipamentoAdapter(equipamentosList, this);
         recyclerEquipamentos.setAdapter(adapter);
 
@@ -85,7 +89,7 @@ public class LocalDetailActivity extends AppCompatActivity implements Equipament
 
                     for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
                         Map<String, Object> equipamento = document.getData();
-                        equipamento.put("id", document.getId()); // Adiciona o ID do equipamento
+                        equipamento.put("id", document.getId());
                         equipamentosList.add(equipamento);
 
                         Double valor = document.getDouble("valorTotalAluguel");
@@ -115,15 +119,12 @@ public class LocalDetailActivity extends AppCompatActivity implements Equipament
                     Toast.makeText(this, "Erro ao buscar equipamentos.", Toast.LENGTH_SHORT).show();
                 });
     }
-    
-    // --- Implementação dos Métodos de Clique do Menu de Equipamento ---
 
     @Override
     public void onEditClick(Map<String, Object> equipment) {
         Intent intent = new Intent(this, LocarEquipamentoActivity.class);
         intent.putExtra("LOCAL_ID", localId);
         intent.putExtra("EQUIPMENT_ID", (String) equipment.get("id"));
-        // Passa o mapa inteiro de dados do equipamento para a tela de edição
         intent.putExtra("EQUIPMENT_DATA", (Serializable) equipment);
         startActivity(intent);
     }
@@ -141,13 +142,69 @@ public class LocalDetailActivity extends AppCompatActivity implements Equipament
 
     @Override
     public void onReturnClick(Map<String, Object> equipment) {
-        new AlertDialog.Builder(this)
-                .setTitle("Marcar como Devolvido")
-                .setMessage("Isso removerá o equipamento da lista de aluguéis ativos. Deseja continuar?")
-                .setPositiveButton("Sim, Devolver", (dialog, which) -> {
-                    excluirEquipamentoDoFirebase((String) equipment.get("id"));
+        showDevolucaoDialog(equipment);
+    }
+
+    private void showDevolucaoDialog(Map<String, Object> equipment) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        LayoutInflater inflater = this.getLayoutInflater();
+        View dialogView = inflater.inflate(R.layout.dialog_devolucao_parcial, null);
+        builder.setView(dialogView);
+
+        final EditText inputQuantidade = dialogView.findViewById(R.id.input_quantidade_devolver);
+        final TextView dialogMessage = dialogView.findViewById(R.id.dialog_message);
+        final Long quantidadeAtual = (Long) equipment.get("quantidadeLocada");
+
+        dialogMessage.setText("Quantidade a devolver (Máx: " + quantidadeAtual + "):");
+
+        builder.setTitle("Devolução Parcial")
+                .setPositiveButton("Confirmar", (dialog, which) -> {
+                    String qtdStr = inputQuantidade.getText().toString();
+                    if (TextUtils.isEmpty(qtdStr)) {
+                        Toast.makeText(this, "Por favor, insira uma quantidade.", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
+                    try {
+                        long qtdADevolver = Long.parseLong(qtdStr);
+                        if (qtdADevolver <= 0 || qtdADevolver > quantidadeAtual) {
+                            Toast.makeText(this, "Quantidade inválida.", Toast.LENGTH_SHORT).show();
+                            return;
+                        }
+
+                        processarDevolucao((String) equipment.get("id"), quantidadeAtual, qtdADevolver);
+
+                    } catch (NumberFormatException e) {
+                        Toast.makeText(this, "Número inválido.", Toast.LENGTH_SHORT).show();
+                    }
                 })
-                .setNegativeButton("Não", null).show();
+                .setNegativeButton("Cancelar", (dialog, which) -> dialog.cancel());
+
+        builder.create().show();
+    }
+
+    private void processarDevolucao(String equipmentId, long quantidadeAtual, long qtdADevolver) {
+        DocumentReference equipmentRef = db.collection("locais").document(localId)
+                .collection("equipamentos_locados").document(equipmentId);
+
+        if (qtdADevolver == quantidadeAtual) {
+            // Devolveu tudo, então exclui o registro
+            equipmentRef.delete()
+                    .addOnSuccessListener(aVoid -> {
+                        Toast.makeText(this, "Equipamento devolvido com sucesso!", Toast.LENGTH_SHORT).show();
+                        carregarDetalhesDoLocal();
+                    })
+                    .addOnFailureListener(e -> Toast.makeText(this, "Erro ao processar devolução total.", Toast.LENGTH_SHORT).show());
+        } else {
+            // Devolveu uma parte, então atualiza a quantidade
+            long novaQuantidade = quantidadeAtual - qtdADevolver;
+            equipmentRef.update("quantidadeLocada", novaQuantidade)
+                    .addOnSuccessListener(aVoid -> {
+                        Toast.makeText(this, qtdADevolver + " ite(ns) devolvido(s) com sucesso!", Toast.LENGTH_SHORT).show();
+                        carregarDetalhesDoLocal();
+                    })
+                    .addOnFailureListener(e -> Toast.makeText(this, "Erro ao processar devolução parcial.", Toast.LENGTH_SHORT).show());
+        }
     }
 
     private void excluirEquipamentoDoFirebase(String equipmentId) {
@@ -155,16 +212,15 @@ public class LocalDetailActivity extends AppCompatActivity implements Equipament
             Toast.makeText(this, "Erro: ID inválido.", Toast.LENGTH_SHORT).show();
             return;
         }
-
         db.collection("locais").document(localId)
                 .collection("equipamentos_locados").document(equipmentId)
                 .delete()
                 .addOnSuccessListener(aVoid -> {
-                    Toast.makeText(this, "Operação realizada com sucesso!", Toast.LENGTH_SHORT).show();
-                    carregarDetalhesDoLocal(); // Recarrega a lista
+                    Toast.makeText(this, "Registro excluído com sucesso!", Toast.LENGTH_SHORT).show();
+                    carregarDetalhesDoLocal();
                 })
                 .addOnFailureListener(e -> {
-                    Toast.makeText(this, "Erro ao realizar a operação.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "Erro ao excluir o registro.", Toast.LENGTH_SHORT).show();
                 });
     }
 

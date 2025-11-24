@@ -8,159 +8,189 @@
     android:padding="16dp"
     tools:context=".LocarEquipamentoActivity">
 
-    <!-- Fields for local, equipamento, quantidade, valor, data... -->
-    <TextView
-        android:id="@+id/text_titulo_locar"
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="30dp"
-        android:text="Locar Equipamento"
-        android:textAlignment="center"
-        android:textSize="25sp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:layout_height="match_parent">
 
-    <Spinner
-        android:id="@+id/spinner_locais"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/text_titulo_locar" />
-
-    <EditText
-        android:id="@+id/equipamento"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:hint="Nome do equipamento"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/spinner_locais" />
-
-    <EditText
-        android:id="@+id/quantidadeLocada"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:hint="Quantidade"
-        android:inputType="number"
-        app:layout_constraintEnd_toStartOf="@+id/valorequipamento"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/equipamento" />
-
-    <EditText
-        android:id="@+id/valorequipamento"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:hint="Valor (R$)"
-        android:inputType="numberDecimal"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/quantidadeLocada"
-        app:layout_constraintTop_toTopOf="@+id/quantidadeLocada" />
-
-    <EditText
-        android:id="@+id/input_data_aluguel"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:focusable="false"
-        android:hint="Data de Aluguel"
-        app:layout_constraintTop_toBottomOf="@+id/quantidadeLocada" />
-
-    <!-- Título da Seção de Período -->
-    <TextView
-        android:id="@+id/label_periodo"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
-        android:text="Período de Aluguel"
-        android:textSize="15sp"
-        app:layout_constraintTop_toBottomOf="@+id/input_data_aluguel" />
-
-    <!-- Seletor de Modo (RadioButtons) -->
-    <RadioGroup
-        android:id="@+id/rg_periodo_modo"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:orientation="horizontal"
-        app:layout_constraintTop_toBottomOf="@+id/label_periodo">
-
-        <RadioButton
-            android:id="@+id/rb_periodo_simples"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:checked="true"
-            android:text="Simples" />
-
-        <RadioButton
-            android:id="@+id/rb_periodo_custom"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Customizado" />
-    </RadioGroup>
-
-    <!-- Container para os Seletores de Período -->
-    <FrameLayout
-        android:id="@+id/period_selector_container"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        app:layout_constraintTop_toBottomOf="@+id/rg_periodo_modo">
-
-        <!-- Container para o Período Simples -->
-        <Spinner
-            android:id="@+id/spinner_periodo_simples"
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:entries="@array/ciclos_aluguel"
-            android:visibility="visible" />
+            android:layout_height="wrap_content">
 
-        <!-- Container para o Período Customizado (inicialmente invisível) -->
-        <LinearLayout
-            android:id="@+id/container_periodo_custom"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:visibility="gone">
-
-            <EditText
-                android:id="@+id/input_prazo_quantidade"
-                android:layout_width="0dp"
+            <TextView
+                android:id="@+id/text_titulo_locar"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:hint="Qtd."
-                android:inputType="number" />
+                android:layout_marginTop="16dp"
+                android:text="Locar Equipamento"
+                android:textAlignment="center"
+                android:textSize="25sp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
 
             <Spinner
-                android:id="@+id/spinner_prazo_unidade"
+                android:id="@+id/spinner_locais"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/text_titulo_locar" />
+
+            <EditText
+                android:id="@+id/equipamento"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:hint="Nome do equipamento"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/spinner_locais" />
+
+            <EditText
+                android:id="@+id/quantidadeLocada"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="2"
-                android:entries="@array/unidades_prazo" />
-        </LinearLayout>
+                android:layout_marginTop="8dp"
+                android:hint="Quantidade"
+                android:inputType="number"
+                android:layout_marginEnd="8dp"
+                app:layout_constraintEnd_toStartOf="@+id/valorequipamento"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/equipamento" />
 
-    </FrameLayout>
+            <EditText
+                android:id="@+id/valorequipamento"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:hint="Valor (R$)"
+                android:inputType="numberDecimal"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@+id/quantidadeLocada"
+                app:layout_constraintTop_toTopOf="@+id/quantidadeLocada" />
 
-    <!-- Previsão de Devolução -->
-    <TextView
-        android:id="@+id/text_data_devolucao"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:paddingTop="16dp"
-        android:text="Previsão de Devolução: --"
-        android:textSize="16sp"
-        android:textStyle="bold"
-        app:layout_constraintTop_toBottomOf="@+id/period_selector_container" />
+            <RadioGroup
+                android:id="@+id/valor_tipo"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="4dp"
+                app:layout_constraintTop_toBottomOf="@+id/valorequipamento"
+                app:layout_constraintStart_toStartOf="@+id/valorequipamento"
+                app:layout_constraintEnd_toEndOf="@+id/valorequipamento">
 
-    <Button
-        android:id="@+id/btn_locar"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:text="Locar"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/text_data_devolucao" />
+                <RadioButton
+                    android:id="@+id/valor_unitario"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Unitário"
+                    android:checked="true"/>
 
+                <RadioButton
+                    android:id="@+id/valor_total"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Total"/>
+            </RadioGroup>
+
+            <EditText
+                android:id="@+id/input_data_aluguel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:focusable="false"
+                android:hint="Data de Aluguel"
+                app:layout_constraintTop_toBottomOf="@+id/valor_tipo" />
+
+            <TextView
+                android:id="@+id/label_periodo"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:text="Período de Aluguel"
+                android:textSize="15sp"
+                app:layout_constraintTop_toBottomOf="@+id/input_data_aluguel" />
+
+            <RadioGroup
+                android:id="@+id/rg_periodo_modo"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:orientation="horizontal"
+                app:layout_constraintTop_toBottomOf="@+id/label_periodo">
+
+                <RadioButton
+                    android:id="@+id/rb_periodo_simples"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checked="true"
+                    android:text="Simples" />
+
+                <RadioButton
+                    android:id="@+id/rb_periodo_custom"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Customizado" />
+            </RadioGroup>
+
+            <FrameLayout
+                android:id="@+id/period_selector_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                app:layout_constraintTop_toBottomOf="@+id/rg_periodo_modo">
+
+                <Spinner
+                    android:id="@+id/spinner_periodo_simples"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:entries="@array/ciclos_aluguel"
+                    android:visibility="visible" />
+
+                <LinearLayout
+                    android:id="@+id/container_periodo_custom"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:visibility="gone">
+
+                    <EditText
+                        android:id="@+id/input_prazo_quantidade"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:hint="Qtd."
+                        android:inputType="number" />
+
+                    <Spinner
+                        android:id="@+id/spinner_prazo_unidade"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="2"
+                        android:entries="@array/unidades_prazo" />
+                </LinearLayout>
+
+            </FrameLayout>
+
+            <TextView
+                android:id="@+id/text_data_devolucao"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="16dp"
+                android:text="Previsão de Devolução: --"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                app:layout_constraintTop_toBottomOf="@+id/period_selector_container" />
+
+            <Button
+                android:id="@+id/btn_locar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:layout_marginBottom="16dp"
+                android:text="Locar"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/text_data_devolucao"
+                app:layout_constraintBottom_toBottomOf="parent"/>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </ScrollView>
 </androidx.constraintlayout.widget.ConstraintLayout>

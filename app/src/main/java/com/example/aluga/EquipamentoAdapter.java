@@ -2,6 +2,7 @@ package com.example.aluga;
 
 import android.content.Context;
 import android.view.LayoutInflater;
+import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -82,6 +83,14 @@ public class EquipamentoAdapter extends RecyclerView.Adapter<EquipamentoAdapter.
         private void showPopupMenu(Context context, View view, Map<String, Object> equipment, OnEquipmentOptionsClickListener listener) {
             PopupMenu popup = new PopupMenu(context, view);
             popup.getMenuInflater().inflate(R.menu.equipment_item_menu, popup.getMenu());
+
+            Long quantidade = (Long) equipment.get("quantidadeLocada");
+            if (quantidade != null && quantidade > 1) {
+                popup.getMenu().findItem(R.id.menu_equip_return).setVisible(true);
+            } else {
+                popup.getMenu().findItem(R.id.menu_equip_return).setVisible(false);
+            }
+
             popup.setOnMenuItemClickListener(item -> {
                 int itemId = item.getItemId();
                 if (itemId == R.id.menu_equip_edit) {

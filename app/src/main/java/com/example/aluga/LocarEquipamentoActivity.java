@@ -22,6 +22,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
+import java.io.Serializable;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -38,8 +39,8 @@ public class LocarEquipamentoActivity extends AppCompatActivity {
     private EditText inputEquipamentoNome, inputQuantidade, inputValor, inputDataAluguel, inputPrazoQuantidade;
     private TextView textDataDevolucao;
     private Button btnLocar;
-    private RadioGroup rgPeriodoModo;
-    private RadioButton rbPeriodoSimples, rbPeriodoCustom;
+    private RadioGroup rgPeriodoModo, rgValorTipo;
+    private RadioButton rbPeriodoSimples, rbValorUnitario, rbValorTotal;
     private LinearLayout containerPeriodoCustom;
 
     // --- Firebase ---
@@ -82,8 +83,10 @@ public class LocarEquipamentoActivity extends AppCompatActivity {
         btnLocar = findViewById(R.id.btn_locar);
         rgPeriodoModo = findViewById(R.id.rg_periodo_modo);
         rbPeriodoSimples = findViewById(R.id.rb_periodo_simples);
-        rbPeriodoCustom = findViewById(R.id.rb_periodo_custom);
         containerPeriodoCustom = findViewById(R.id.container_periodo_custom);
+        rgValorTipo = findViewById(R.id.valor_tipo);
+        rbValorUnitario = findViewById(R.id.valor_unitario);
+        rbValorTotal = findViewById(R.id.valor_total);
 
         locaisAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, locaisList);
         locaisAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -98,7 +101,7 @@ public class LocarEquipamentoActivity extends AppCompatActivity {
             if (checkedId == R.id.rb_periodo_simples) {
                 spinnerPeriodoSimples.setVisibility(View.VISIBLE);
                 containerPeriodoCustom.setVisibility(View.GONE);
-            } else if (checkedId == R.id.rb_periodo_custom) {
+            } else {
                 spinnerPeriodoSimples.setVisibility(View.GONE);
                 containerPeriodoCustom.setVisibility(View.VISIBLE);
             }
@@ -125,7 +128,6 @@ public class LocarEquipamentoActivity extends AppCompatActivity {
     }
 
     private void enterEditMode() {
-        // Similar to before, but now also handles the period selection
         isEditMode = true;
         btnLocar.setText("Atualizar");
 
@@ -143,55 +145,45 @@ public class LocarEquipamentoActivity extends AppCompatActivity {
         inputValor.setText(String.format(Locale.US, "%.2f", equipmentData.get("valorTotalAluguel")));
         inputDataAluguel.setText((String) equipmentData.get("dataAluguel"));
 
-        // Set the correct period mode
         Long prazoQtd = (Long) equipmentData.get("prazoQuantidade");
         if (prazoQtd != null && prazoQtd == 1) {
             rbPeriodoSimples.setChecked(true);
             setPeriodoSimplesSpinner((String) equipmentData.get("prazoUnidade"));
         } else {
-            rbPeriodoCustom.setChecked(true);
+            findViewById(R.id.rb_periodo_custom).performClick();
             inputPrazoQuantidade.setText(String.valueOf(prazoQtd));
             setPeriodoCustomSpinner((String) equipmentData.get("prazoUnidade"));
         }
+
+        rbValorTotal.performClick();
+        rgValorTipo.setVisibility(View.GONE);
 
         carregarLocalUnico(localId);
         spinnerLocais.setEnabled(false);
     }
 
     private void salvarOuAtualizarLocacao() {
-        // ... (validation code is similar)
+        String equipamentoNome = inputEquipamentoNome.getText().toString().trim();
+        String quantidadeStr = inputQuantidade.getText().toString().trim();
+        String valorStr = inputValor.getText().toString().trim();
+        String dataAluguel = inputDataAluguel.getText().toString();
 
-        try {
-            int prazoQtd;
-            String prazoUnidade;
-
-            if (rbPeriodoSimples.isChecked()) {
-                String periodoSelecionado = spinnerPeriodoSimples.getSelectedItem().toString();
-                prazoQtd = 1;
-                if (periodoSelecionado.equalsIgnoreCase("Semanal")) prazoUnidade = "semanas";
-                else if (periodoSelecionado.equalsIgnoreCase("Mensal")) prazoUnidade = "meses";
-                else prazoUnidade = "dias";
-            } else {
-                prazoQtd = Integer.parseInt(inputPrazoQuantidade.getText().toString().trim());
-                prazoUnidade = spinnerPrazoUnidade.getSelectedItem().toString();
-            }
-            
-            // Build the map and save/update in Firebase (similar to before)
-            // ...
-
-        } catch (NumberFormatException e) {
-            Toast.makeText(this, "Verifique os campos numéricos.", Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    private void calcularEAtualizarDataDevolucao() {
-        String dataInicioStr = inputDataAluguel.getText().toString();
-        if (dataInicioStr.isEmpty()) {
-            textDataDevolucao.setText("Previsão de Devolução: --");
+        if (equipamentoNome.isEmpty() || quantidadeStr.isEmpty() || valorStr.isEmpty() || dataAluguel.isEmpty()) {
+            Toast.makeText(this, "Preencha todos os campos obrigatórios.", Toast.LENGTH_SHORT).show();
             return;
         }
 
         try {
+            int quantidade = Integer.parseInt(quantidadeStr);
+            double valorInput = Double.parseDouble(valorStr.replace(",", "."));
+            double valorTotalAluguel;
+
+            if (rbValorUnitario.isChecked()) {
+                valorTotalAluguel = valorInput * quantidade;
+            } else {
+                valorTotalAluguel = valorInput;
+            }
+
             int prazoQtd;
             String prazoUnidade;
 
@@ -203,30 +195,50 @@ public class LocarEquipamentoActivity extends AppCompatActivity {
                 else prazoUnidade = "dias";
             } else {
                 String prazoQtdStr = inputPrazoQuantidade.getText().toString().trim();
-                if(prazoQtdStr.isEmpty()) {
-                    textDataDevolucao.setText("Previsão de Devolução: --");
+                if (prazoQtdStr.isEmpty()) {
+                    Toast.makeText(this, "Preencha a quantidade do prazo customizado.", Toast.LENGTH_SHORT).show();
                     return;
                 }
                 prazoQtd = Integer.parseInt(prazoQtdStr);
                 prazoUnidade = spinnerPrazoUnidade.getSelectedItem().toString();
             }
-            
-            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
-            Calendar cal = Calendar.getInstance();
-            cal.setTime(sdf.parse(dataInicioStr));
 
-            if (prazoUnidade.equalsIgnoreCase("dias")) cal.add(Calendar.DAY_OF_MONTH, prazoQtd);
-            else if (prazoUnidade.equalsIgnoreCase("semanas")) cal.add(Calendar.WEEK_OF_YEAR, prazoQtd);
-            else if (prazoUnidade.equalsIgnoreCase("meses")) cal.add(Calendar.MONTH, prazoQtd);
+            Map<String, Object> locacaoData = new HashMap<>();
+            locacaoData.put("nomeEquipamento", equipamentoNome);
+            locacaoData.put("quantidadeLocada", quantidade);
+            locacaoData.put("valorTotalAluguel", valorTotalAluguel);
+            locacaoData.put("dataAluguel", dataAluguel);
+            locacaoData.put("prazoQuantidade", prazoQtd);
+            locacaoData.put("prazoUnidade", prazoUnidade);
+            locacaoData.put("isValorUnitario", rbValorUnitario.isChecked());
 
-            textDataDevolucao.setText("Previsão de Devolução: " + sdf.format(cal.getTime()));
-
-        } catch (ParseException | NumberFormatException e) {
-            textDataDevolucao.setText("Previsão de Devolução: Erro");
+            if (isEditMode) {
+                db.collection("locais").document(localId).collection("equipamentos_locados").document(equipmentId)
+                        .update(locacaoData)
+                        .addOnSuccessListener(aVoid -> {
+                            Toast.makeText(this, "Equipamento atualizado!", Toast.LENGTH_SHORT).show();
+                            finish();
+                        })
+                        .addOnFailureListener(e -> Toast.makeText(this, "Erro ao atualizar.", Toast.LENGTH_SHORT).show());
+            } else {
+                LocalSpinnerItem localSelecionado = (LocalSpinnerItem) spinnerLocais.getSelectedItem();
+                if (localSelecionado == null) {
+                    Toast.makeText(this, "Selecione um local.", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                String currentLocalId = localSelecionado.getId();
+                db.collection("locais").document(currentLocalId).collection("equipamentos_locados")
+                        .add(locacaoData)
+                        .addOnSuccessListener(docRef -> {
+                            Toast.makeText(this, "Equipamento locado!", Toast.LENGTH_SHORT).show();
+                            limparFormulario();
+                        })
+                        .addOnFailureListener(e -> Toast.makeText(this, "Erro ao locar.", Toast.LENGTH_SHORT).show());
+            }
+        } catch (NumberFormatException e) {
+            Toast.makeText(this, "Verifique os campos de quantidade e valor.", Toast.LENGTH_SHORT).show();
         }
     }
-
-    // --- Other helper methods like carregarLocais, etc. remain similar ---
 
     private void carregarLocaisDoFirebase() {
         db.collection("locais").get().addOnSuccessListener(queryDocumentSnapshots -> {
@@ -263,8 +275,7 @@ public class LocarEquipamentoActivity extends AppCompatActivity {
         else if (prazoUnidade.equalsIgnoreCase("meses")) spinnerPrazoUnidade.setSelection(adapter.getPosition("meses"));
         else spinnerPrazoUnidade.setSelection(adapter.getPosition("dias"));
     }
-    
-    // ... (showDatePickerDialog, limparFormulario, LocalSpinnerItem class) ...
+
     private void limparFormulario() {
         inputEquipamentoNome.setText("");
         inputQuantidade.setText("");
@@ -275,7 +286,7 @@ public class LocarEquipamentoActivity extends AppCompatActivity {
         inputPrazoQuantidade.setText("");
         textDataDevolucao.setText("Previsão de Devolução: --");
     }
-    
+
     private void showDatePickerDialog() {
         final Calendar c = Calendar.getInstance();
         new DatePickerDialog(this, (view, year, month, dayOfMonth) -> {
@@ -285,11 +296,66 @@ public class LocarEquipamentoActivity extends AppCompatActivity {
             inputDataAluguel.setText(sdf.format(dataSelecionada.getTime()));
         }, c.get(Calendar.YEAR), c.get(Calendar.MONTH), c.get(Calendar.DAY_OF_MONTH)).show();
     }
-    
+
+    private void calcularEAtualizarDataDevolucao() {
+        String dataInicioStr = inputDataAluguel.getText().toString();
+        if (dataInicioStr.isEmpty()) {
+            textDataDevolucao.setText("Previsão de Devolução: --");
+            return;
+        }
+        try {
+            int prazoQtd;
+            String prazoUnidade;
+
+            if (rbPeriodoSimples.isChecked()) {
+                String periodoSelecionado = spinnerPeriodoSimples.getSelectedItem().toString();
+                prazoQtd = 1;
+                if (periodoSelecionado.equalsIgnoreCase("Semanal")) prazoUnidade = "semanas";
+                else if (periodoSelecionado.equalsIgnoreCase("Mensal")) prazoUnidade = "meses";
+                else prazoUnidade = "dias";
+            } else {
+                String prazoQtdStr = inputPrazoQuantidade.getText().toString().trim();
+                if (prazoQtdStr.isEmpty()) {
+                    textDataDevolucao.setText("Previsão de Devolução: --");
+                    return;
+                }
+                prazoQtd = Integer.parseInt(prazoQtdStr);
+                prazoUnidade = spinnerPrazoUnidade.getSelectedItem().toString();
+            }
+
+            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+            Calendar cal = Calendar.getInstance();
+            cal.setTime(sdf.parse(dataInicioStr));
+
+            if (prazoUnidade.equalsIgnoreCase("dias")) cal.add(Calendar.DAY_OF_MONTH, prazoQtd);
+            else if (prazoUnidade.equalsIgnoreCase("semanas")) cal.add(Calendar.WEEK_OF_YEAR, prazoQtd);
+            else if (prazoUnidade.equalsIgnoreCase("meses")) cal.add(Calendar.MONTH, prazoQtd);
+
+            textDataDevolucao.setText("Previsão de Devolução: " + sdf.format(cal.getTime()));
+
+        } catch (ParseException | NumberFormatException e) {
+            textDataDevolucao.setText("Previsão de Devolução: Erro");
+        }
+    }
+
+    // Classe interna para o Spinner de Locais
     private static class LocalSpinnerItem {
-        private String id, nome;
-        public LocalSpinnerItem(String id, String nome) { this.id = id; this.nome = nome; }
-        public String getId() { return id; }
-        @NonNull @Override public String toString() { return nome; }
+        private String id;
+        private String nome;
+
+        public LocalSpinnerItem(String id, String nome) {
+            this.id = id;
+            this.nome = nome;
+        }
+
+        public String getId() {
+            return id;
+        }
+
+        @NonNull
+        @Override
+        public String toString() {
+            return nome;
+        }
     }
 }
