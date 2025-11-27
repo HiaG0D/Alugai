@@ -117,7 +117,7 @@ public class EquipamentoAdapter extends RecyclerView.Adapter<EquipamentoAdapter.
 
             // Lógica para mostrar/esconder a opção de devolução parcial.
             Long quantidade = (Long) equipment.get("quantidadeLocada");
-            if (quantidade != null && quantidade > 1) {
+            if (quantidade != null && quantidade > 0) {
                 // Se a quantidade for maior que 1, a opção de devolver fica visível.
                 popup.getMenu().findItem(R.id.menu_equip_return).setVisible(true);
             } else {
