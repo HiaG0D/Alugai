@@ -27,8 +27,7 @@ import java.util.Map;
 public class ListaLocaisActivity extends AppCompatActivity implements LocaisAdapter.OnItemClickListener, LocaisAdapter.OnOptionsClickListener {
 
     private FirebaseFirestore db;
-    private RecyclerView recyclerView;
-    private List<Map<String, Object>> locaisList = new ArrayList<>();
+    private final List<Map<String, Object>> locaisList = new ArrayList<>();
     private LocaisAdapter adapter;
 
     @Override
@@ -37,7 +36,7 @@ public class ListaLocaisActivity extends AppCompatActivity implements LocaisAdap
         setContentView(R.layout.activity_lista_locais);
 
         db = FirebaseFirestore.getInstance();
-        recyclerView = findViewById(R.id.lista_locais_recycler);
+        RecyclerView recyclerView = findViewById(R.id.lista_locais_recycler);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
         // 2. Passa "this" como o listener para AMBAS as interfaces
