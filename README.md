@@ -1,5 +1,12 @@
 # Alugaí - Gerenciador de Aluguel de Equipamentos
 
+## Integrantes 
+    - Hiago Lima
+    - Hiram Bahia
+    - Derick Sales 
+    - Ediney Novaes
+    - Paulo Felipe
+
 ## Descrição do Projeto
 
 O **Alugaí** é um aplicativo Android desenvolvido para gerenciar o aluguel de equipamentos, permitindo o controle de locações, devoluções e o gerenciamento de locais e clientes de forma simples e eficiente. O projeto utiliza o Google Firebase Firestore como backend para armazenamento de dados em tempo real.
